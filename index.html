@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>𝕏 | المنصة الاجتماعية المتكاملة</title>
+    <title>Sotwe | منصة اجتماعية متكاملة</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script type="importmap">
@@ -35,62 +35,76 @@
         /* Light Mode */
         body.light-mode {
             background: #ffffff;
-            color: #000000;
+            color: #111111;
         }
-        body.light-mode .tweet-card { background: #ffffff; border-bottom-color: #eff3f4; }
+        body.light-mode .tweet-card { background: #ffffff; border-bottom-color: #eef2f5; }
         body.light-mode .tweet-card:hover { background: #f7f9f9; }
-        body.light-mode .top-bar { background: rgba(255,255,255,0.98); border-bottom-color: #eff3f4; }
-        body.light-mode .bottom-nav { background: rgba(255,255,255,0.98); border-top-color: #eff3f4; }
+        body.light-mode .top-bar { background: rgba(255,255,255,0.98); border-bottom-color: #eef2f5; }
+        body.light-mode .bottom-nav { background: rgba(255,255,255,0.98); border-top-color: #eef2f5; }
+        body.light-mode .auth-card { background: #ffffff; border: 1px solid #eef2f5; }
+        body.light-mode .auth-card input { background: #f7f9f9; border-color: #eef2f5; color: #111; }
         body.light-mode .compose-panel { background: #ffffff; }
         body.light-mode .profile-panel { background: #ffffff; }
         body.light-mode .comments-panel { background: #ffffff; }
         body.light-mode .chat-panel { background: #ffffff; }
-        body.light-mode .search-input { background: #eff3f4; color: #000000; }
-        body.light-mode .compose-input { background: #eff3f4; color: #000000; }
-        body.light-mode .comment-input input { background: #eff3f4; color: #000000; }
+        body.light-mode .search-input { background: #f7f9f9; color: #111; }
+        body.light-mode .compose-input { background: #f7f9f9; color: #111; }
+        body.light-mode .comment-input input { background: #f7f9f9; color: #111; }
 
-        /* Scrollbar */
+        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #2f3336; border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: #1d9bf0; border-radius: 10px; }
 
-        /* Auth Screen */
+        /* Auth Screen - Like Sotwe */
         .auth-screen {
             position: fixed;
             inset: 0;
             z-index: 1000;
-            background: linear-gradient(135deg, #000000 0%, #1a1a2e 100%);
+            background: #000000;
             display: flex;
             align-items: center;
             justify-content: center;
         }
+        body.light-mode .auth-screen { background: #ffffff; }
+        
         .auth-card {
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(20px);
+            background: #000000;
             border-radius: 32px;
-            padding: 48px 32px;
+            padding: 48px 40px;
             width: 90%;
             max-width: 460px;
             text-align: center;
-            border: 1px solid rgba(29,155,240,0.3);
-            animation: fadeInUp 0.5s ease;
+            border: 1px solid #2f3336;
         }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
+        body.light-mode .auth-card { background: #ffffff; border: 1px solid #eef2f5; }
+        
+        .auth-card h1 {
+            font-size: 56px;
+            font-weight: 900;
+            margin-bottom: 32px;
+            background: linear-gradient(135deg, #1d9bf0, #f91880);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-        .auth-card h1 { font-size: 48px; font-weight: 900; margin-bottom: 32px; background: linear-gradient(135deg, #1d9bf0, #f91880); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
         .auth-card input {
             width: 100%;
-            padding: 14px 20px;
-            margin: 8px 0;
-            border-radius: 40px;
+            padding: 16px 20px;
+            margin: 10px 0;
+            border-radius: 12px;
             background: #1a1a1a;
             border: 1px solid #2f3336;
             color: white;
             font-size: 16px;
+            transition: 0.2s;
         }
-        body.light-mode .auth-card input { background: #eff3f4; border-color: #cfd9de; color: #000; }
+        .auth-card input:focus {
+            outline: none;
+            border-color: #1d9bf0;
+            box-shadow: 0 0 0 2px rgba(29,155,240,0.2);
+        }
+        
         .auth-card button {
             width: 100%;
             padding: 14px;
@@ -105,28 +119,60 @@
             transition: 0.2s;
         }
         .auth-card button:hover { background: #1a8cd8; }
-        .auth-tabs {
+        
+        .auth-divider {
             display: flex;
-            gap: 8px;
-            margin-bottom: 32px;
-            background: #1a1a1a;
-            border-radius: 60px;
-            padding: 4px;
-        }
-        .auth-tab {
-            flex: 1;
-            padding: 12px;
-            background: none;
-            border: none;
+            align-items: center;
+            margin: 24px 0;
             color: #71767b;
-            cursor: pointer;
-            border-radius: 60px;
+            font-size: 14px;
+        }
+        .auth-divider::before,
+        .auth-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #2f3336;
+        }
+        .auth-divider::before { margin-left: 16px; }
+        .auth-divider::after { margin-right: 16px; }
+        
+        .google-btn {
+            background: transparent;
+            border: 1px solid #2f3336;
+            color: #e7e9ea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        .google-btn:hover { background: rgba(29,155,240,0.1); border-color: #1d9bf0; }
+        
+        .auth-link {
+            margin-top: 32px;
+            color: #71767b;
+            font-size: 14px;
+        }
+        .auth-link a {
+            color: #1d9bf0;
+            text-decoration: none;
             font-weight: 600;
         }
-        .auth-tab.active { background: #1d9bf0; color: white; }
+        .auth-link a:hover { text-decoration: underline; }
+        
+        .forgot-password {
+            display: block;
+            text-align: left;
+            color: #1d9bf0;
+            font-size: 13px;
+            margin-top: 8px;
+            text-decoration: none;
+        }
+        .forgot-password:hover { text-decoration: underline; }
+        
         .auth-form { display: none; }
         .auth-form.active { display: block; }
-        .error-msg { color: #f91880; font-size: 13px; margin-top: 12px; }
+        .error-msg { color: #f91880; font-size: 13px; margin-top: 8px; text-align: left; }
 
         /* Main App */
         #mainApp { display: none; height: 100vh; background: #000000; overflow-y: auto; }
@@ -156,7 +202,6 @@
         .top-icons { display: flex; gap: 24px; align-items: center; }
         .top-icon { font-size: 22px; color: #e7e9ea; cursor: pointer; position: relative; transition: 0.2s; }
         .top-icon:hover { color: #1d9bf0; }
-        body.light-mode .top-icon { color: #536471; }
         .notification-badge {
             position: absolute;
             top: -8px;
@@ -193,7 +238,6 @@
             cursor: pointer;
         }
         .tweet-card:hover { background: #080808; }
-        body.light-mode .tweet-card:hover { background: #f7f9f9; }
         .tweet-header { display: flex; gap: 12px; margin-bottom: 8px; }
         .tweet-avatar {
             width: 48px;
@@ -209,8 +253,49 @@
         .tweet-username { font-size: 13px; color: #71767b; }
         .tweet-time { font-size: 13px; color: #71767b; }
         .tweet-content { margin: 8px 0 12px; font-size: 15px; line-height: 1.4; white-space: pre-wrap; }
-        .tweet-media { margin: 12px 0; border-radius: 20px; overflow: hidden; max-height: 500px; background: #1a1a1a; }
-        .tweet-media img, .tweet-media video { width: 100%; object-fit: cover; max-height: 500px; }
+        
+        /* Image Gallery - Professional */
+        .tweet-media {
+            margin: 12px 0;
+            border-radius: 20px;
+            overflow: hidden;
+            background: #1a1a1a;
+            cursor: pointer;
+        }
+        .tweet-media img {
+            width: 100%;
+            max-height: 500px;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        .tweet-media img:hover { transform: scale(1.02); }
+        .tweet-media video { width: 100%; max-height: 500px; border-radius: 20px; }
+        
+        /* Image Modal */
+        .image-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .image-modal.open {
+            opacity: 1;
+            visibility: visible;
+        }
+        .image-modal img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 16px;
+        }
+        
         .tweet-actions {
             display: flex;
             justify-content: space-between;
@@ -258,8 +343,8 @@
             resize: none;
             outline: none;
         }
-        body.light-mode .compose-input { background: #ffffff; color: #000000; }
         .media-preview { margin: 16px 0; display: none; }
+        .media-preview img { max-height: 300px; border-radius: 20px; width: 100%; object-fit: cover; }
         .compose-tools {
             display: flex;
             gap: 16px;
@@ -325,7 +410,6 @@
             cursor: pointer;
             position: relative;
         }
-        body.light-mode .profile-avatar { border-color: #ffffff; }
         .profile-avatar-edit {
             position: absolute;
             bottom: 4px;
@@ -361,7 +445,6 @@
             font-size: 14px;
         }
         .profile-btn-primary { background: #1d9bf0; color: white; }
-        .profile-btn-primary:hover { background: #1a8cd8; }
         .profile-btn-secondary { background: #2f3336; color: white; }
         .profile-tabs { display: flex; border-bottom: 1px solid #2f3336; }
         .profile-tab {
@@ -389,7 +472,7 @@
         }
         .profile-post img, .profile-post video { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Comments Panel */
+        /* Comments Panel - Improved */
         .comments-panel {
             position: fixed;
             inset: 0;
@@ -403,17 +486,24 @@
         .comments-panel.open { transform: translateX(0); }
         .comments-header { padding: 16px; border-bottom: 1px solid #2f3336; display: flex; justify-content: space-between; align-items: center; }
         .comments-list { flex: 1; overflow-y: auto; padding: 16px; }
-        .comment-item { margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #2f3336; }
+        .comment-item { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #2f3336; }
         .comment-header { display: flex; gap: 12px; margin-bottom: 8px; }
-        .comment-avatar { width: 36px; height: 36px; border-radius: 50%; background: #1d9bf0; overflow: hidden; cursor: pointer; }
-        .comment-user { font-weight: 700; font-size: 14px; }
+        .comment-avatar { width: 40px; height: 40px; border-radius: 50%; background: #1d9bf0; overflow: hidden; cursor: pointer; flex-shrink: 0; }
+        .comment-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .comment-user { font-weight: 700; font-size: 14px; cursor: pointer; }
         .comment-time { font-size: 11px; color: #71767b; }
-        .comment-text { font-size: 14px; margin: 8px 0; }
-        .reply-list { margin-top: 12px; margin-right: 40px; border-right: 2px solid #1d9bf0; padding-right: 12px; }
-        .reply-item { margin-bottom: 12px; }
+        .comment-text { font-size: 14px; margin: 8px 0; line-height: 1.4; }
+        .reply-list { margin-top: 12px; margin-right: 48px; border-right: 2px solid #1d9bf0; padding-right: 12px; }
+        .reply-item { margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #2f3336; }
+        .reply-header { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
+        .reply-avatar { width: 28px; height: 28px; border-radius: 50%; background: #1d9bf0; overflow: hidden; }
+        .reply-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .reply-user { font-weight: 600; font-size: 12px; cursor: pointer; }
+        .reply-text { font-size: 13px; margin: 4px 0; }
         .comment-input-area { padding: 16px; border-top: 1px solid #2f3336; background: #000000; }
         .comment-input { display: flex; gap: 12px; align-items: center; }
-        .comment-input input { flex: 1; padding: 12px 16px; background: #1a1a1a; border: 1px solid #2f3336; border-radius: 40px; color: white; outline: none; }
+        .comment-input input { flex: 1; padding: 12px 16px; background: #1a1a1a; border: 1px solid #2f3336; border-radius: 40px; color: white; outline: none; font-size: 14px; }
+        .comment-input input:focus { border-color: #1d9bf0; }
 
         /* Chat Panel */
         .chat-panel {
@@ -435,6 +525,8 @@
         .chat-message.sent { align-self: flex-end; flex-direction: row-reverse; }
         .message-bubble { background: #1a1a2a; padding: 10px 14px; border-radius: 20px; }
         .message-bubble.sent { background: #1d9bf0; color: white; }
+        .message-image { max-width: 200px; border-radius: 16px; cursor: pointer; }
+        .message-audio audio { height: 36px; }
         .chat-input-area { display: flex; gap: 12px; padding: 12px; border-top: 1px solid #2f3336; background: #000000; }
         .chat-input-area input { flex: 1; padding: 12px 16px; border: 1px solid #2f3336; border-radius: 40px; background: #1a1a1a; color: white; outline: none; }
 
@@ -638,30 +730,56 @@
             pointer-events: none;
             white-space: nowrap;
         }
+        
+        /* Heart Animation */
+        @keyframes heartBeat {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); color: #f91880; }
+            100% { transform: scale(1); }
+        }
+        .heart-animation {
+            animation: heartBeat 0.3s ease;
+        }
     </style>
 </head>
 <body>
 
-<!-- Auth Screen -->
+<!-- Auth Screen - Like Sotwe -->
 <div id="authScreen" class="auth-screen">
     <div class="auth-card">
-        <h1>𝕏</h1>
-        <div class="auth-tabs">
-            <button class="auth-tab active" onclick="switchAuth('login')">تسجيل الدخول</button>
-            <button class="auth-tab" onclick="switchAuth('register')">إنشاء حساب</button>
-        </div>
+        <h1>Sotwe</h1>
         <div id="loginForm" class="auth-form active">
+            <div style="text-align: right; margin-bottom: 24px;">
+                <h2 style="font-size: 24px; font-weight: 700;">تسجيل الدخول</h2>
+                <p style="color: #71767b; margin-top: 8px;">قم بالوصول إلى حسابك في Sotwe</p>
+            </div>
             <input type="email" id="loginEmail" placeholder="البريد الإلكتروني">
             <input type="password" id="loginPassword" placeholder="كلمة المرور">
+            <a href="#" class="forgot-password" onclick="alert('سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني')">نسيت كلمة المرور؟</a>
             <button onclick="login()">تسجيل الدخول</button>
+            <div class="auth-divider">أو</div>
+            <button class="google-btn" onclick="alert('جاري تطوير تسجيل الدخول عبر Google')"><i class="fab fa-google"></i> متابعة باستخدام Google</button>
             <div id="loginMsg" class="error-msg"></div>
+            <div class="auth-link">
+                ليس لديك حساب؟ <a href="#" onclick="switchAuth('register')">إنشاء حساب</a>
+            </div>
         </div>
         <div id="registerForm" class="auth-form">
-            <input type="text" id="regName" placeholder="الاسم">
+            <div style="text-align: right; margin-bottom: 24px;">
+                <h2 style="font-size: 24px; font-weight: 700;">إنشاء حساب</h2>
+                <p style="color: #71767b; margin-top: 8px;">قم بإنشاء حسابك في Sotwe</p>
+            </div>
+            <input type="text" id="regName" placeholder="اسم المستخدم">
             <input type="email" id="regEmail" placeholder="البريد الإلكتروني">
-            <input type="password" id="regPass" placeholder="كلمة المرور (6 أحرف)">
+            <input type="password" id="regPass" placeholder="كلمة المرور">
+            <input type="password" id="regConfirmPass" placeholder="تأكيد كلمة المرور">
             <button onclick="register()">إنشاء حساب</button>
+            <div class="auth-divider">أو</div>
+            <button class="google-btn" onclick="alert('جاري تطوير تسجيل الدخول عبر Google')"><i class="fab fa-google"></i> متابعة باستخدام Google</button>
             <div id="regMsg" class="error-msg"></div>
+            <div class="auth-link">
+                لديك حساب بالفعل؟ <a href="#" onclick="switchAuth('login')">تسجيل الدخول</a>
+            </div>
         </div>
     </div>
 </div>
@@ -669,11 +787,13 @@
 <!-- Main App -->
 <div id="mainApp">
     <div class="top-bar">
-        <div class="logo" onclick="goToHome()">𝕏</div>
+        <div class="logo" onclick="goToHome()">Sotwe</div>
         <div class="top-icons">
             <button class="back-btn" id="backBtn" onclick="goBack()"><i class="fas fa-arrow-right"></i> رجوع</button>
             <i class="fas fa-search top-icon" onclick="openSearch()"></i>
-            <i class="far fa-bell top-icon" onclick="openNotifications()" id="notifIcon"></i>
+            <div class="top-icon" onclick="openNotifications()" id="notifIcon" style="position: relative;">
+                <i class="far fa-bell"></i>
+            </div>
             <i class="far fa-envelope top-icon" onclick="openConversations()"></i>
             <i class="fas fa-sun top-icon" onclick="toggleTheme()"></i>
         </div>
@@ -794,6 +914,11 @@
         <div id="adminUsersList"></div>
         <div id="adminPostsList"></div>
     </div>
+</div>
+
+<!-- Image Modal -->
+<div id="imageModal" class="image-modal" onclick="closeImageModal()">
+    <img id="modalImage" src="">
 </div>
 
 <script type="module" src="firebase-config.js"></script>
