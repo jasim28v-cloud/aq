@@ -20,17 +20,9 @@ let isAdmin = false;
 
 // ========== AUTH ==========
 window.switchAuth = function(type) {
-    const tabs = document.querySelectorAll('.auth-tab');
     const forms = document.querySelectorAll('.auth-form');
-    tabs.forEach(t => t.classList.remove('active'));
     forms.forEach(f => f.classList.remove('active'));
-    if (type === 'login') {
-        tabs[0].classList.add('active');
-        document.getElementById('loginForm').classList.add('active');
-    } else {
-        tabs[1].classList.add('active');
-        document.getElementById('registerForm').classList.add('active');
-    }
+    document.getElementById(type === 'login' ? 'loginForm' : 'registerForm').classList.add('active');
 };
 
 window.login = async function() {
@@ -53,9 +45,11 @@ window.register = async function() {
     const name = document.getElementById('regName').value;
     const email = document.getElementById('regEmail').value;
     const password = document.getElementById('regPass').value;
+    const confirmPass = document.getElementById('regConfirmPass').value;
     const msg = document.getElementById('regMsg');
-    if (!name || !email || !password) { msg.innerText = 'املأ جميع الحقول'; return; }
+    if (!name || !email || !password || !confirmPass) { msg.innerText = 'املأ جميع الحقول'; return; }
     if (password.length < 6) { msg.innerText = 'كلمة المرور 6 أحرف على الأقل'; return; }
+    if (password !== confirmPass) { msg.innerText = 'كلمة المرور غير متطابقة'; return; }
     msg.innerText = 'جاري إنشاء الحساب...';
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -95,6 +89,19 @@ async function uploadMedia(file) {
     return { url: data.secure_url, type: resourceType === 'raw' ? 'audio' : resourceType };
 }
 
+// ========== OPEN IMAGE MODAL ==========
+window.openImageModal = function(imageUrl) {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    modalImg.src = imageUrl;
+    modal.classList.add('open');
+};
+
+window.closeImageModal = function() {
+    const modal = document.getElementById('imageModal');
+    modal.classList.remove('open');
+};
+
 // ========== POSTS ==========
 onValue(ref(db, 'posts'), (s) => {
     const data = s.val();
@@ -123,9 +130,13 @@ function renderFeed() {
         
         let mediaHtml = '';
         if (post.mediaUrl) {
-            if (post.mediaType === 'image') mediaHtml = `<div class="tweet-media"><img src="${post.mediaUrl}" loading="lazy"></div>`;
-            else if (post.mediaType === 'video') mediaHtml = `<div class="tweet-media"><video controls src="${post.mediaUrl}"></video></div>`;
-            else if (post.mediaType === 'audio') mediaHtml = `<div class="tweet-media"><audio controls src="${post.mediaUrl}"></audio></div>`;
+            if (post.mediaType === 'image') {
+                mediaHtml = `<div class="tweet-media" onclick="event.stopPropagation(); openImageModal('${post.mediaUrl}')"><img src="${post.mediaUrl}" loading="lazy" class="cursor-pointer"></div>`;
+            } else if (post.mediaType === 'video') {
+                mediaHtml = `<div class="tweet-media" onclick="event.stopPropagation()"><video controls src="${post.mediaUrl}"></video></div>`;
+            } else if (post.mediaType === 'audio') {
+                mediaHtml = `<div class="tweet-media" onclick="event.stopPropagation()"><audio controls src="${post.mediaUrl}"></audio></div>`;
+            }
         }
         
         let quoteHtml = '';
@@ -138,7 +149,7 @@ function renderFeed() {
                         <span class="font-bold text-sm">${quoteUser.name}</span>
                         <span class="text-xs text-gray-500">@${quoteUser.name?.toLowerCase().replace(/\s/g, '')}</span>
                     </div>
-                    <div class="text-sm">${post.quotePostData.text?.substring(0, 100) || ''}</div>
+                    <div class="text-sm">${escapeHtml(post.quotePostData.text?.substring(0, 100) || '')}</div>
                 </div>
             `;
         }
@@ -150,7 +161,7 @@ function renderFeed() {
             <div class="tweet-header">
                 <div class="tweet-avatar" onclick="event.stopPropagation(); viewProfile('${post.sender}')">${user.avatarUrl ? `<img src="${user.avatarUrl}">` : (user.name?.charAt(0) || '👤')}</div>
                 <div style="flex:1">
-                    <div><span class="tweet-name" onclick="event.stopPropagation(); viewProfile('${post.sender}')">${user.name}</span><span class="tweet-username mx-1">@${user.name?.toLowerCase().replace(/\s/g, '')}</span><span class="tweet-time">· ${new Date(post.timestamp).toLocaleString()}</span></div>
+                    <div><span class="tweet-name" onclick="event.stopPropagation(); viewProfile('${post.sender}')">${escapeHtml(user.name)}</span><span class="tweet-username mx-1">@${user.name?.toLowerCase().replace(/\s/g, '')}</span><span class="tweet-time">· ${new Date(post.timestamp).toLocaleString()}</span></div>
                     <div class="tweet-content">${escapeHtml(post.text || '')}</div>
                     ${mediaHtml}
                     ${quoteHtml}
@@ -186,10 +197,9 @@ window.closeCompose = function() {
 };
 
 function resetCompose() {
-    const postText = document.getElementById('postText');
-    const mediaPreview = document.getElementById('mediaPreview');
-    if (postText) postText.value = '';
-    if (mediaPreview) { mediaPreview.innerHTML = ''; mediaPreview.style.display = 'none'; }
+    document.getElementById('postText').value = '';
+    document.getElementById('mediaPreview').innerHTML = '';
+    document.getElementById('mediaPreview').style.display = 'none';
     selectedMediaFile = null;
     document.getElementById('postImage').value = '';
     document.getElementById('postVideo').value = '';
@@ -276,6 +286,12 @@ window.toggleLike = async function(postId, btn) {
         likes++; 
         likedBy[currentUser.uid] = true; 
         addNotification(post.sender, 'like', postId);
+        // Add heart animation
+        if (btn) {
+            const icon = btn.querySelector('i');
+            if (icon) icon.classList.add('heart-animation');
+            setTimeout(() => icon?.classList.remove('heart-animation'), 300);
+        }
     }
     await update(postRef, { likes, likedBy });
     if (btn) {
@@ -299,12 +315,14 @@ window.toggleRetweet = async function(postId, btn) {
         delete retweets[Object.keys(retweets).find(k => retweets[k].userId === currentUser.uid)];
         delete retweetedBy[currentUser.uid];
         retweetCount--;
+        showToast('تم إلغاء إعادة التغريد');
     } else {
         const newRetweetId = await push(ref(db, `retweets`), { postId, userId: currentUser.uid, timestamp: Date.now() });
         retweets[newRetweetId.key] = { userId: currentUser.uid, timestamp: Date.now() };
         retweetedBy[currentUser.uid] = true;
         retweetCount++;
         addNotification(post.sender, 'retweet', postId);
+        showToast('تم إعادة التغريد');
     }
     await update(postRef, { retweets, retweetedBy });
     if (btn) {
@@ -360,7 +378,7 @@ async function createQuotePost(originalPostId, quoteText) {
     } catch (error) { showToast('❌ فشل النشر'); }
 }
 
-// ========== COMMENTS ==========
+// ========== COMMENTS - IMPROVED ==========
 window.openCommentsModal = async function(postId) {
     currentPostForComments = postId;
     const post = allPosts.find(p => p.id === postId);
@@ -369,33 +387,44 @@ window.openCommentsModal = async function(postId) {
     const comments = post.comments || {};
     if (!container) return;
     container.innerHTML = '';
-    Object.values(comments).sort((a,b) => b.timestamp - a.timestamp).forEach(comment => {
+    const sortedComments = Object.entries(comments).sort((a,b) => b[1].timestamp - a[1].timestamp);
+    for (const [commentKey, comment] of sortedComments) {
         const user = allUsers[comment.userId] || { name: comment.username || 'مستخدم', avatarUrl: '' };
         const replies = comment.replies || {};
-        const commentId = Object.keys(comments).find(k => comments[k] === comment) || Date.now();
         const commentDiv = document.createElement('div');
         commentDiv.className = 'comment-item';
         commentDiv.innerHTML = `
             <div class="comment-header">
                 <div class="comment-avatar" onclick="viewProfile('${comment.userId}')">${user.avatarUrl ? `<img src="${user.avatarUrl}">` : (user.name?.charAt(0) || '👤')}</div>
-                <div><div class="comment-user" onclick="viewProfile('${comment.userId}')">${user.name}</div><div class="comment-time">${new Date(comment.timestamp).toLocaleString()}</div></div>
+                <div style="flex:1">
+                    <div><span class="comment-user" onclick="viewProfile('${comment.userId}')">${escapeHtml(user.name)}</span><span class="comment-time mx-2">· ${new Date(comment.timestamp).toLocaleString()}</span></div>
+                    <div class="comment-text">${escapeHtml(comment.text)}</div>
+                </div>
             </div>
-            <div class="comment-text">${escapeHtml(comment.text)}</div>
-            <div class="reply-list" id="replies-${commentId}"></div>
-            <div><button class="text-[#1d9bf0] text-sm" onclick="showReplyInput('${commentId}')"><i class="fas fa-reply"></i> رد</button></div>
-            <div id="reply-input-${commentId}" class="mt-2"></div>
+            <div class="reply-list" id="replies-${commentKey}"></div>
+            <div><button class="text-[#1d9bf0] text-sm mt-2" onclick="showReplyInput('${commentKey}')"><i class="fas fa-reply"></i> رد</button></div>
+            <div id="reply-input-${commentKey}" class="mt-2"></div>
         `;
-        const repliesContainer = commentDiv.querySelector(`#replies-${commentId}`);
-        if (repliesContainer) {
-            Object.values(replies).sort((a,b) => a.timestamp - b.timestamp).forEach(reply => {
+        const repliesContainer = commentDiv.querySelector(`#replies-${commentKey}`);
+        if (repliesContainer && replies) {
+            const sortedReplies = Object.entries(replies).sort((a,b) => a[1].timestamp - b[1].timestamp);
+            for (const [replyKey, reply] of sortedReplies) {
                 const replyUser = allUsers[reply.userId] || { name: reply.username || 'مستخدم', avatarUrl: '' };
                 repliesContainer.innerHTML += `
-                    <div class="reply-item"><div class="flex gap-2 items-center mb-1"><div class="reply-avatar w-6 h-6 rounded-full bg-[#1d9bf0] overflow-hidden">${replyUser.avatarUrl ? `<img src="${replyUser.avatarUrl}">` : (replyUser.name?.charAt(0) || '👤')}</div><div class="reply-user font-bold text-sm">${replyUser.name}</div><div class="comment-time text-xs text-gray-500">${new Date(reply.timestamp).toLocaleTimeString()}</div></div><div class="reply-text text-sm">${escapeHtml(reply.text)}</div></div>
+                    <div class="reply-item">
+                        <div class="reply-header">
+                            <div class="reply-avatar" onclick="viewProfile('${reply.userId}')">${replyUser.avatarUrl ? `<img src="${replyUser.avatarUrl}">` : (replyUser.name?.charAt(0) || '👤')}</div>
+                            <div class="reply-user" onclick="viewProfile('${reply.userId}')">${escapeHtml(replyUser.name)}</div>
+                            <div class="comment-time">${new Date(reply.timestamp).toLocaleTimeString()}</div>
+                        </div>
+                        <div class="reply-text">${escapeHtml(reply.text)}</div>
+                    </div>
                 `;
-            });
+            }
         }
         container.appendChild(commentDiv);
-    });
+    }
+    if (container.innerHTML === '') container.innerHTML = '<div class="text-center text-gray-500 py-10">لا توجد تعليقات بعد</div>';
     document.getElementById('commentsPanel').classList.add('open');
     document.getElementById('backBtn').style.display = 'flex';
 };
@@ -409,7 +438,7 @@ window.showReplyInput = function(commentId) {
     const replyDiv = document.getElementById(`reply-input-${commentId}`);
     if (!replyDiv) return;
     if (replyDiv.innerHTML) { replyDiv.innerHTML = ''; return; }
-    replyDiv.innerHTML = `<div class="flex gap-2 mt-2"><input type="text" id="reply-text-${commentId}" class="flex-1 bg-[#1a1a2a] border border-[#2f3336] rounded-full px-3 py-2 text-sm" placeholder="اكتب رداً..."><button onclick="addReply('${commentId}')" class="bg-[#1d9bf0] text-white px-4 py-2 rounded-full text-sm">نشر</button></div>`;
+    replyDiv.innerHTML = `<div class="flex gap-2 mt-2"><input type="text" id="reply-text-${commentId}" class="flex-1 bg-[#1a1a2a] border border-[#2f3336] rounded-full px-3 py-2 text-sm" placeholder="اكتب رداً..." onkeypress="if(event.key==='Enter') addReply('${commentId}')"><button onclick="addReply('${commentId}')" class="bg-[#1d9bf0] text-white px-4 py-2 rounded-full text-sm">نشر</button></div>`;
 };
 
 window.addReply = async function(commentId) {
@@ -439,11 +468,11 @@ window.addComment = async function() {
 async function addNotification(targetUserId, type, postId = null) {
     if (targetUserId === currentUser.uid) return;
     const messages = { 
-        like: 'أعجب بمنشورك', 
-        comment: 'علق على منشورك', 
-        retweet: 'أعاد تغريد منشورك',
-        quote: 'اقتبس منشورك',
-        follow: 'بدأ بمتابعتك'
+        like: '❤️ أعجب بمنشورك', 
+        comment: '💬 علق على منشورك', 
+        retweet: '🔄 أعاد تغريد منشورك',
+        quote: '📝 اقتبس منشورك',
+        follow: '👥 بدأ بمتابعتك'
     };
     await push(ref(db, `notifications/${targetUserId}`), {
         type, fromUserId: currentUser.uid, fromUsername: currentUserData?.name,
@@ -481,7 +510,7 @@ window.openNotifications = async function() {
             <div class="notification-item ${bgColor}" onclick="handleNotificationClick('${n.type}', '${n.fromUserId}', '${n.postId || ''}')">
                 <div class="text-2xl">${icons[n.type] || '🔔'}</div>
                 <div class="flex-1">
-                    <div class="font-bold">${n.fromUsername}</div>
+                    <div class="font-bold">${escapeHtml(n.fromUsername)}</div>
                     <div class="text-sm text-gray-500">${n.message}</div>
                     <div class="text-xs text-gray-500 mt-1">${new Date(n.timestamp).toLocaleString()}</div>
                 </div>
@@ -668,10 +697,12 @@ window.toggleFollow = async function(userId, btn) {
         await set(userRef, null); await set(targetRef, null);
         if (btn) btn.innerText = 'متابعة';
         addNotification(userId, 'follow');
+        showToast(`👋 توقفت عن متابعة ${allUsers[userId]?.name}`);
     } else {
         await set(userRef, true); await set(targetRef, true);
         if (btn) btn.innerText = 'متابع';
         addNotification(userId, 'follow');
+        showToast(`👥 بدأت بمتابعة ${allUsers[userId]?.name}`);
     }
     if (viewingProfileUserId === userId) await loadProfileData(userId);
 };
@@ -688,7 +719,7 @@ window.openFollowersList = async function(type) {
         for (const [uid] of Object.entries(list)) {
             const u = allUsers[uid];
             if (u) {
-                container.innerHTML += `<div class="follower-item" onclick="viewProfile('${uid}')"><div class="w-12 h-12 rounded-full bg-[#1d9bf0] overflow-hidden flex items-center justify-center">${u.avatarUrl ? `<img src="${u.avatarUrl}">` : (u.name?.charAt(0) || 'U')}</div><div><div class="font-bold">${u.name}</div><div class="text-sm text-gray-500">@${u.name?.toLowerCase().replace(/\s/g, '')}</div></div></div>`;
+                container.innerHTML += `<div class="follower-item" onclick="viewProfile('${uid}')"><div class="w-12 h-12 rounded-full bg-[#1d9bf0] overflow-hidden flex items-center justify-center">${u.avatarUrl ? `<img src="${u.avatarUrl}">` : (u.name?.charAt(0) || 'U')}</div><div><div class="font-bold">${escapeHtml(u.name)}</div><div class="text-sm text-gray-500">@${u.name?.toLowerCase().replace(/\s/g, '')}</div></div></div>`;
             }
         }
     }
@@ -715,7 +746,7 @@ window.openConversations = async function() {
     for (const [otherId, convData] of Object.entries(conversations)) {
         const otherUser = allUsers[otherId];
         if (otherUser) {
-            container.innerHTML += `<div class="conversation-item" onclick="openPrivateChat('${otherId}')"><div class="w-12 h-12 rounded-full bg-[#1d9bf0] overflow-hidden flex items-center justify-center">${otherUser.avatarUrl ? `<img src="${otherUser.avatarUrl}">` : (otherUser.name?.charAt(0) || 'U')}</div><div><div class="font-bold">${otherUser.name}</div><div class="text-sm text-gray-500">${convData.lastMessage?.substring(0, 40) || 'رسالة'}</div></div></div>`;
+            container.innerHTML += `<div class="conversation-item" onclick="openPrivateChat('${otherId}')"><div class="w-12 h-12 rounded-full bg-[#1d9bf0] overflow-hidden flex items-center justify-center">${otherUser.avatarUrl ? `<img src="${otherUser.avatarUrl}">` : (otherUser.name?.charAt(0) || 'U')}</div><div><div class="font-bold">${escapeHtml(otherUser.name)}</div><div class="text-sm text-gray-500">${convData.lastMessage?.substring(0, 40) || 'رسالة'}</div></div></div>`;
         }
     }
     if (container.innerHTML === '') container.innerHTML = '<div class="text-center text-gray-500 py-10">لا توجد محادثات بعد</div>';
@@ -844,7 +875,7 @@ function renderStories(stories) {
         container.innerHTML += `
             <div class="story-card" onclick="window.open('${story.mediaUrl}','_blank')">
                 <div class="story-ring"><img class="story-avatar" src="${user.avatarUrl || 'https://via.placeholder.com/80'}"></div>
-                <div class="story-name">${user.name}</div>
+                <div class="story-name">${escapeHtml(user.name)}</div>
             </div>
         `;
     });
@@ -891,11 +922,11 @@ window.searchAll = function() {
     if (!resultsDiv) return;
     if (!query) { resultsDiv.innerHTML = ''; return; }
     const users = Object.values(allUsers).filter(u => u.name?.toLowerCase().includes(query));
-    resultsDiv.innerHTML = users.map(u => `<div class="search-result" onclick="viewProfile('${u.uid}')"><div class="w-10 h-10 rounded-full bg-[#1d9bf0] overflow-hidden flex items-center justify-center">${u.avatarUrl ? `<img src="${u.avatarUrl}">` : (u.name?.charAt(0) || 'U')}</div><div><div class="font-bold">${u.name}</div><div class="text-sm text-gray-500">@${u.name?.toLowerCase().replace(/\s/g, '')}</div></div></div>`).join('');
+    resultsDiv.innerHTML = users.map(u => `<div class="search-result" onclick="viewProfile('${u.uid}')"><div class="w-10 h-10 rounded-full bg-[#1d9bf0] overflow-hidden flex items-center justify-center">${u.avatarUrl ? `<img src="${u.avatarUrl}">` : (u.name?.charAt(0) || 'U')}</div><div><div class="font-bold">${escapeHtml(u.name)}</div><div class="text-sm text-gray-500">@${u.name?.toLowerCase().replace(/\s/g, '')}</div></div></div>`).join('');
     if (users.length === 0) resultsDiv.innerHTML = '<div class="text-center text-gray-500 py-10">لا توجد نتائج</div>';
 };
 
-// ========== ADMIN ==========
+// ========== ADMIN - IMPROVED ==========
 window.openAdmin = async function() {
     if (!isAdmin) return;
     const statsDiv = document.getElementById('adminStats');
@@ -903,23 +934,24 @@ window.openAdmin = async function() {
     const postsListDiv = document.getElementById('adminPostsList');
     if (statsDiv) {
         statsDiv.innerHTML = `
-            <div class="admin-stat"><div class="text-xl font-bold">${Object.keys(allUsers).length}</div><div>مستخدمين</div></div>
-            <div class="admin-stat"><div class="text-xl font-bold">${allPosts.length}</div><div>منشورات</div></div>
-            <div class="admin-stat"><div class="text-xl font-bold">${allPosts.reduce((s,p)=>s+(p.likes||0),0)}</div><div>إعجابات</div></div>
+            <div class="admin-stat"><div class="text-xl font-bold">${Object.keys(allUsers).length}</div><div>👥 مستخدمين</div></div>
+            <div class="admin-stat"><div class="text-xl font-bold">${allPosts.length}</div><div>📝 منشورات</div></div>
+            <div class="admin-stat"><div class="text-xl font-bold">${allPosts.reduce((s,p)=>s+(p.likes||0),0)}</div><div>❤️ إعجابات</div></div>
+            <div class="admin-stat"><div class="text-xl font-bold">${allPosts.reduce((s,p)=>s+(p.comments ? Object.keys(p.comments).length : 0),0)}</div><div>💬 تعليقات</div></div>
         `;
     }
     if (usersListDiv) {
-        usersListDiv.innerHTML = '<h4 class="font-bold mt-4">إدارة المستخدمين</h4>';
+        usersListDiv.innerHTML = '<h4 class="font-bold mt-4 mb-2">👥 إدارة المستخدمين</h4>';
         Object.entries(allUsers).forEach(([uid, u]) => {
             if (uid !== currentUser.uid) {
-                usersListDiv.innerHTML += `<div class="flex justify-between items-center p-2 border-b border-[#2f3336]"><span>@${u.name}</span><button class="admin-delete-btn" onclick="adminDeleteUser('${uid}')">حذف</button></div>`;
+                usersListDiv.innerHTML += `<div class="flex justify-between items-center p-3 border-b border-[#2f3336]"><div><div class="font-bold">${escapeHtml(u.name)}</div><div class="text-sm text-gray-500">${u.email}</div></div><button class="admin-delete-btn" onclick="adminDeleteUser('${uid}')">🗑️ حذف</button></div>`;
             }
         });
     }
     if (postsListDiv) {
-        postsListDiv.innerHTML = '<h4 class="font-bold mt-4">إدارة المنشورات</h4>';
-        allPosts.slice(0, 10).forEach(post => {
-            postsListDiv.innerHTML += `<div class="flex justify-between items-center p-2 border-b border-[#2f3336]"><span>${post.text?.substring(0, 40) || 'منشور'}</span><button class="admin-delete-btn" onclick="adminDeletePost('${post.id}')">حذف</button></div>`;
+        postsListDiv.innerHTML = '<h4 class="font-bold mt-4 mb-2">📝 إدارة المنشورات</h4>';
+        allPosts.slice(0, 20).forEach(post => {
+            postsListDiv.innerHTML += `<div class="flex justify-between items-center p-3 border-b border-[#2f3336]"><div><div class="font-bold">${escapeHtml(post.senderName || 'مستخدم')}</div><div class="text-sm text-gray-500">${post.text?.substring(0, 50) || 'منشور'}</div></div><button class="admin-delete-btn" onclick="adminDeletePost('${post.id}')">🗑️ حذف</button></div>`;
         });
     }
     document.getElementById('adminPanel').classList.add('open');
@@ -932,25 +964,26 @@ window.closeAdmin = function() {
 };
 
 window.adminDeleteUser = async function(userId) {
-    if (!isAdmin || !confirm('حذف هذا المستخدم وجميع منشوراته؟')) return;
+    if (!isAdmin || !confirm('⚠️ حذف هذا المستخدم وجميع منشوراته؟')) return;
     const posts = allPosts.filter(p => p.sender === userId);
     for (const post of posts) await set(ref(db, `posts/${post.id}`), null);
     await set(ref(db, `users/${userId}`), null);
-    showToast('تم حذف المستخدم');
+    showToast('✅ تم حذف المستخدم');
     location.reload();
 };
 
 window.adminDeletePost = async function(postId) {
-    if (!isAdmin || !confirm('حذف هذا المنشور؟')) return;
+    if (!isAdmin || !confirm('⚠️ حذف هذا المنشور؟')) return;
     await set(ref(db, `posts/${postId}`), null);
-    showToast('تم حذف المنشور');
+    showToast('✅ تم حذف المنشور');
     renderFeed();
 };
 
 // ========== NAVIGATION ==========
 window.switchTab = function(tab) {
-    document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
-    event.target.closest('.nav-item').classList.add('active');
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(t => t.classList.remove('active'));
+    if (event.target.closest('.nav-item')) event.target.closest('.nav-item').classList.add('active');
     if (tab === 'home') {
         closeCompose(); closeProfile(); closeChat(); closeConversations(); 
         closeNotifications(); closeSearch(); closeStories(); closeComments(); 
@@ -959,7 +992,14 @@ window.switchTab = function(tab) {
 };
 
 window.goToHome = function() { 
-    switchTab('home'); 
+    const homeBtn = document.querySelector('.nav-item i.fa-home')?.closest('.nav-item');
+    if (homeBtn) {
+        document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
+        homeBtn.classList.add('active');
+    }
+    closeCompose(); closeProfile(); closeChat(); closeConversations(); 
+    closeNotifications(); closeSearch(); closeStories(); closeComments(); 
+    closeFollowers(); closeAdmin();
     document.getElementById('backBtn').style.display = 'none'; 
 };
 
@@ -980,6 +1020,11 @@ window.goBack = function() {
 window.toggleTheme = function() {
     document.body.classList.toggle('light-mode');
     localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+    const themeIcon = document.querySelector('.top-icon.fa-sun');
+    if (themeIcon) {
+        if (document.body.classList.contains('light-mode')) themeIcon.classList.remove('fa-sun');
+        else themeIcon.classList.add('fa-sun');
+    }
 };
 
 // ========== AUTH STATE ==========
@@ -992,11 +1037,11 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('mainApp').style.display = 'block';
         updateNotificationBadge();
         if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
-        showToast(`مرحباً ${currentUserData?.name || 'مستخدم'}`);
+        showToast(`👋 مرحباً ${currentUserData?.name || 'مستخدم'}`);
     } else {
         document.getElementById('authScreen').style.display = 'flex';
         document.getElementById('mainApp').style.display = 'none';
     }
 });
 
-console.log('✅ X Platform Ready - Full Features');
+console.log('✅ Sotwe Platform Ready - Full Features');
